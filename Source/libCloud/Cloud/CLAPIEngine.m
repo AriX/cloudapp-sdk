@@ -809,7 +809,7 @@ NSString *const CLAPIEnginePrivacyOptionPublic = @"public";
 	NSURLConnection *connection = [[NSURLConnection alloc] initWithRequest:transaction.request
                                                                   delegate:self
                                                           startImmediately:NO];
-	[connection scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
+	[connection setDelegateQueue:[NSOperationQueue mainQueue]];
 	transaction.connection = connection;
 	[self.transactions addObject:transaction];
 	[connection start];
