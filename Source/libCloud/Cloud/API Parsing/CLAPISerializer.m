@@ -7,8 +7,6 @@
 //
 
 #import "CLAPISerializer.h"
-#import "JSON.h"
-
 
 @implementation CLAPISerializer
 
@@ -120,24 +118,14 @@
 {
 	if (dict == nil || ![dict isKindOfClass:[NSDictionary class]])
 		return nil;
-	
-	NSString *jsonString = [dict JSONRepresentation];
-	if (jsonString == nil)
-		return nil;
-    
-	return [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+	return [NSJSONSerialization dataWithJSONObject:dict options:0 error:nil];
 }
 
 + (NSData *)JSONDataFromArray:(NSArray *)array
 {
 	if (array == nil || ![array isKindOfClass:[NSArray class]])
 		return nil;
-	
-	NSString *jsonString = [array JSONRepresentation];
-	if (jsonString == nil)
-		return nil;
-    
-	return [jsonString dataUsingEncoding:NSUTF8StringEncoding];
+	return [NSJSONSerialization dataWithJSONObject:array options:0 error:nil];
 }
 
 @end
