@@ -70,6 +70,7 @@ extern NSString *const CLAPIEnginePrivacyOptionPublic;
 - (NSString *)uploadFileWithName:(NSString *)fileName fileData:(NSData *)fileData userInfo:(id)userInfo;
 - (NSString *)bookmarkLinkWithURL:(NSURL *)URL name:(NSString *)name options:(NSDictionary *)options userInfo:(id)userInfo;
 - (NSString *)uploadFileWithName:(NSString *)fileName fileData:(NSData *)fileData options:(NSDictionary *)options userInfo:(id)userInfo;
+- (NSString *)uploadFileWithName:(NSString *)fileName fileURL:(NSURL *)fileURL options:(NSDictionary *)options userInfo:(id)userInfo;
 - (NSString *)deleteItem:(CLWebItem *)webItem userInfo:(id)userInfo;
 - (NSString *)deleteItemAtHref:(NSURL *)href userInfo:(id)userInfo;
 - (NSString *)restoreItem:(CLWebItem *)webItem userInfo:(id)userInfo;

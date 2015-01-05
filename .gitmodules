@@ -1,3 +1,6 @@
 [submodule "Source/libCloud/Cloud/Third Party/IFUnicodeURL"]
 	path = Source/libCloud/Cloud/Third Party/IFUnicodeURL
 	url = git@github.com:cloudapp/IFUnicodeURL.git
+[submodule "Source/libCloud/Cloud/Third Party/PKMultipartInputStream"]
+	path = Source/libCloud/Cloud/Third Party/PKMultipartInputStream
+	url = git@github.com:pyke369/PKMultipartInputStream.git

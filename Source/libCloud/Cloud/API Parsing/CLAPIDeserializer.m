@@ -10,7 +10,7 @@
 #import "CLWebItem.h"
 #import "CLAccount.h"
 #import "CLSocket.h"
-#import "NSMutableURLRequest+NPPOSTBody.h"
+#import "PKMultipartInputStream.h"
 #import "NSString+NPMimeType.h"
 #import "NSURL+IFUnicodeURL.h"
 
@@ -176,6 +176,16 @@
 
 + (NSURLRequest *)URLRequestWithS3ParametersDictionary:(NSDictionary *)s3Dict fileName:(NSString *)fileName fileData:(NSData *)fileData
 {
+    return [self URLRequestWithS3ParametersDictionary:s3Dict fileName:fileName fileData:fileData fileURL:nil];
+}
+
++ (NSURLRequest *)URLRequestWithS3ParametersDictionary:(NSDictionary *)s3Dict fileName:(NSString *)fileName fileURL:(NSURL *)fileURL
+{
+    return [self URLRequestWithS3ParametersDictionary:s3Dict fileName:fileName fileData:nil fileURL:fileURL];
+}
+
++ (NSURLRequest *)URLRequestWithS3ParametersDictionary:(NSDictionary *)s3Dict fileName:(NSString *)fileName fileData:(NSData *)fileData fileURL:(NSURL *)fileURL
+{
     // Make sure to combine any decomposed pieces of any unicode characters (may be diacritical marks) into precomposed characters
     fileName = [fileName precomposedStringWithCanonicalMapping];
     
@@ -185,16 +195,24 @@
 		return nil;
 	
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:postURL];
-	[request setHTTPMethod:@"POST"];
 	[request addValue:@"application/json" forHTTPHeaderField:@"Accept"];
-	[request addValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@; charset=UTF-8", NPHTTPBoundary] forHTTPHeaderField:@"Content-Type"];
+    
+    PKMultipartInputStream *body = [PKMultipartInputStream new];
     
 	for (NSString *currKey in [actualParams allKeys]) {
-		[request addToHTTPBodyValue:[actualParams objectForKey:currKey] forKey:currKey];
+        [body addPartWithName:currKey string:[actualParams objectForKey:currKey]];
 	}
     
-	[request addToHTTPBodyFileData:fileData fileName:fileName mimeType:[fileName mimeType] forKey:@"file"];
-	[request finalizeHTTPBody];
+    if (fileURL)
+        [body addPartWithName:@"file" filename:(fileName ?: fileURL.lastPathComponent) path:fileURL.path];
+    else
+        [body addPartWithName:@"file" filename:fileName data:fileData contentType:[fileName mimeType]];
+    
+    [request setValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@", [body boundary]] forHTTPHeaderField:@"Content-Type"];
+    [request setValue:[NSString stringWithFormat:@"%lu", (unsigned long)[body length]] forHTTPHeaderField:@"Content-Length"];
+    
+    [request setHTTPBodyStream:body];
+    [request setHTTPMethod:@"POST"];
     
 	return request;
 }

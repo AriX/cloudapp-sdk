@@ -379,8 +379,18 @@ NSString *const CLAPIEnginePrivacyOptionPublic = @"public";
 
 - (NSString *)uploadFileWithName:(NSString *)fileName fileData:(NSData *)fileData options:(NSDictionary *)options userInfo:(id)userInfo
 {
+    return [self uploadFileWithName:fileName fileData:fileData fileURL:nil options:options userInfo:userInfo];
+}
+
+- (NSString *)uploadFileWithName:(NSString *)fileName fileURL:(NSURL *)fileURL options:(NSDictionary *)options userInfo:(id)userInfo
+{
+    return [self uploadFileWithName:fileName fileData:nil fileURL:fileURL options:options userInfo:userInfo];
+}
+
+- (NSString *)uploadFileWithName:(NSString *)fileName fileData:(NSData *)fileData fileURL:(NSURL *)fileURL options:(NSDictionary *)options userInfo:(id)userInfo
+{
     if (![self isReady])
-		return nil;
+        return nil;
     
     
     NSURL *apiURL = [self _URLWithPath:@"/items/new"];
@@ -398,21 +408,21 @@ NSString *const CLAPIEnginePrivacyOptionPublic = @"public";
     // Make sure that the API URL is still valid after the editing
     if (apiURL == nil)
         return nil;
-
-	
-	CLAPITransaction *transaction = [CLAPITransaction transaction];
-	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:apiURL];
-	[request setHTTPMethod:@"GET"];
-	[request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
-	
-	transaction.request         = request;
-	transaction.identifier      = [NSString uniqueString];
-	transaction.requestType     = CLAPIRequestTypeGetS3UploadCredentials;
-	transaction.userInfo        = userInfo;
-	transaction.internalContext = [NSDictionary dictionaryWithObjectsAndKeys:fileName, @"name",
-                                   fileData, @"data", nil];
-	
-	return [self _createAndStartConnectionForTransaction:transaction];
+    
+    
+    CLAPITransaction *transaction = [CLAPITransaction transaction];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:apiURL];
+    [request setHTTPMethod:@"GET"];
+    [request setValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    
+    transaction.request         = request;
+    transaction.identifier      = [NSString uniqueString];
+    transaction.requestType     = CLAPIRequestTypeGetS3UploadCredentials;
+    transaction.userInfo        = userInfo;
+    transaction.internalContext = [NSDictionary dictionaryWithObjectsAndKeys:fileName, @"name",
+                                   (fileURL ?: fileData), (fileURL ? @"fileURL" : @"data"), nil];
+    
+    return [self _createAndStartConnectionForTransaction:transaction];
 }
 
 #pragma mark -
@@ -632,8 +642,17 @@ NSString *const CLAPIEnginePrivacyOptionPublic = @"public";
 			
             // Check if file is too big
 			NSData *fileData = [transaction.internalContext objectForKey:@"data"];
+            NSURL *fileURL = [transaction.internalContext objectForKey:@"fileURL"];
             NSUInteger maxUploadSize = [[s3Dict objectForKey:@"max_upload_size"] unsignedIntegerValue];
-            NSUInteger fileSize = [fileData length];
+            NSUInteger fileSize;
+            if (fileURL) {
+                NSNumber *fileSizeNumber = nil;
+                [fileURL getResourceValue:&fileSizeNumber forKey:NSFileSize error:nil];
+                fileSize = [fileSizeNumber unsignedIntegerValue];
+            } else {
+                fileSize = [fileData length];
+            }
+            
 			if (maxUploadSize < fileSize && [[s3Dict allKeys] containsObject:@"max_upload_size"]) {
                 // Too big, create user info dict & error
                 NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
@@ -663,7 +682,8 @@ NSString *const CLAPIEnginePrivacyOptionPublic = @"public";
             // Upload file
 			NSURLRequest *request = [CLAPIDeserializer URLRequestWithS3ParametersDictionary:s3Dict
                                                                                    fileName:[transaction.internalContext objectForKey:@"name"]
-                                                                                   fileData:fileData];
+                                                                                   fileData:fileData
+                                                                                    fileURL:fileURL];
 			CLAPITransaction *newTransaction = [CLAPITransaction transaction];
 			newTransaction.identifier  = transaction.identifier;
 			newTransaction.userInfo    = transaction.userInfo;

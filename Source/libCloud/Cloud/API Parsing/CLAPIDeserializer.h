@@ -28,6 +28,8 @@
 + (CLWebItemType)webItemTypeForTypeString:(NSString *)typeString;
 + (NSURLRequest *)URLRequestWithS3ParametersDictionaryData:(NSData *)jsonData fileName:(NSString *)fileName fileData:(NSData *)fileData;
 + (NSURLRequest *)URLRequestWithS3ParametersDictionary:(NSDictionary *)s3Dict fileName:(NSString *)fileName fileData:(NSData *)fileData;
++ (NSURLRequest *)URLRequestWithS3ParametersDictionary:(NSDictionary *)s3Dict fileName:(NSString *)fileName fileURL:(NSURL *)fileURL;
++ (NSURLRequest *)URLRequestWithS3ParametersDictionary:(NSDictionary *)s3Dict fileName:(NSString *)fileName fileData:(NSData *)fileData fileURL:(NSURL *)fileURL;
 + (NSArray *)productsWithJSONArrayData:(NSData *)jsonData;
 
 + (NSDictionary *)dictionaryFromJSONData:(NSData *)data;
