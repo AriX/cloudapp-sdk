@@ -214,6 +214,8 @@
     [request setHTTPBodyStream:body];
     [request setHTTPMethod:@"POST"];
     
+    [body release];
+    
 	return request;
 }
 
